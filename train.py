@@ -13,9 +13,10 @@ if __name__ == "__main__":
 
     train_dir = "datasets/train"
     val_dir = "datasets/val"
-    batch_size = 8
+    batch_size = 2048
     image_size = 224
     model = ResNet50(input_shape=(image_size, image_size, 3), classes=2)
+    # model.load_weights("ResNet50.h5")
     model.summary()
     opt = optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
     model.compile(optimizer=opt,
@@ -36,12 +37,16 @@ if __name__ == "__main__":
     val_dataset = load_image(val_dir, batch_size, image_size)
     model.fit(
         train_dataset,
-        epochs=1000,
+        epochs=2,
         callbacks=[reduce_lr, logging, checkpoint, early_stopping],
         validation_data=val_dataset,
         initial_epoch=0,
         max_queue_size=20,
         workers=4)
 
+    # 保存keras特有的h5文件模型，这个可以直接加载
     model.save("models" + "/ResNet-model.h5")
+    # 保存keras的权重文件，这个需要先搭建模型然后加载权重文件
     model.save_weights("models" + "/ResNet-weights.h5")
+    # 保存pb文件，用于tf直接加载模型
+    tf.saved_model.save(model, "models/pb")
